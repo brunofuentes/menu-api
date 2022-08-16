@@ -1,6 +1,4 @@
 import sys
-from urllib import response
-
 from flask import (
     Flask,
     request,
@@ -9,13 +7,22 @@ from flask import (
     Response,
     jsonify
 )
-from flask_sqlalchemy import SQLAlchemy
 from .models import setup_db, Restaurant, Item
+from flask_sqlalchemy import SQLAlchemy
+from flask_admin import Admin
+from flask_admin.contrib.sqla import ModelView
+from .config import Config
 
 
 def create_app(test_config=None):
     app = Flask(__name__)
     setup_db(app)
+    app.config.from_object(Config)
+    db = SQLAlchemy()
+    admin = Admin(app)
+
+    admin.add_view(ModelView(Restaurant, db.session))
+    admin.add_view(ModelView(Item, db.session))
 
     @app.route('/')
     def index():
