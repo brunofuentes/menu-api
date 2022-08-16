@@ -97,7 +97,7 @@ class Restaurant(db.Model):
         db.session.commit()
 
     def __repr__(self):
-        return f'<Restaurant {self.id} {self.name}>'
+        return f'Restaurant {self.id} {self.name}'
 
 
 class Item(db.Model):
@@ -139,4 +139,4 @@ class Item(db.Model):
         db.session.commit()
 
     def __repr__(self):
-        return f'<Item {self.id} {self.name} >'
+        return f'Item {self.id} {self.name}'
