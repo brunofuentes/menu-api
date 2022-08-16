@@ -49,6 +49,7 @@ def db_drop_and_create_all():
 
 class Restaurant(db.Model):
     __tablename__ = 'restaurants'
+
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
     slug = Column(String)
@@ -62,6 +63,7 @@ class Restaurant(db.Model):
     instagramUrl = Column(String)
     facebookUrl = Column(String)
     items = db.relationship('Item', backref='restaurant', lazy=True)
+    users = db.relationship('User', backref='restaurant', lazy=True)
 
     def to_dict(self):
         return {
@@ -97,7 +99,34 @@ class Restaurant(db.Model):
         db.session.commit()
 
     def __repr__(self):
-        return f'Restaurant {self.id} {self.name}'
+        return f'Restaurant {self.id}: {self.name}'
+
+
+class User(db.Model):
+    __tablename__ = 'users'
+
+    id = Column(Integer, primary_key=True)
+    username = Column(String)
+    email = Column(String)
+    name = Column(String)
+    phone = Column(String)
+    address = Column(String)
+    restaurant_id = Column(Integer, db.ForeignKey(
+        'restaurants.id'), nullable=False)
+
+    def add(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def update(self):
+        db.session.commit()
+
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+
+    def __repr__(self):
+        return f'User {self.id}: {self.name}'
 
 
 class Item(db.Model):
@@ -139,4 +168,4 @@ class Item(db.Model):
         db.session.commit()
 
     def __repr__(self):
-        return f'Item {self.id} {self.name}'
+        return f'Item {self.id}: {self.name}'

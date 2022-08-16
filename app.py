@@ -7,22 +7,27 @@ from flask import (
     Response,
     jsonify
 )
-from .models import setup_db, Restaurant, Item
+from .models import setup_db, Restaurant, Item, User
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from .config import Config
 
+db = SQLAlchemy()
+migrate = Migrate()
+
 
 def create_app(test_config=None):
     app = Flask(__name__)
+    app.config.from_object('config')
     setup_db(app)
-    app.config.from_object(Config)
-    db = SQLAlchemy()
+    migrate.init_app(app, db)
     admin = Admin(app)
 
     admin.add_view(ModelView(Restaurant, db.session))
     admin.add_view(ModelView(Item, db.session))
+    admin.add_view(ModelView(User, db.session))
 
     @app.route('/')
     def index():
