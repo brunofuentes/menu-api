@@ -6,9 +6,22 @@ from flask import (
     request,
     abort,
     render_template,
+    url_for,
+    redirect,
     Response,
-    jsonify
+    jsonify,
+    session,
+    flash
 )
+from datetime import timedelta
+from sqlalchemy.exc import (
+    IntegrityError, DataError, DatabaseError, InterfaceError, InvalidRequestError)
+from werkzeug.routing import BuildError
+from flask_bcrypt import Bcrypt, generate_password_hash, check_password_hash
+from flask_login import (UserMixin, login_user, LoginManager,
+                         current_user, logout_user, login_required)
+from .forms import login_form, register_form
+from flask_bcrypt import Bcrypt
 from .models import setup_db, Restaurant, Item, User
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -16,8 +29,14 @@ from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from .config import Config
 
+
 db = SQLAlchemy()
 migrate = Migrate()
+bcrypt = Bcrypt()
+login_manager = LoginManager()
+login_manager.session_protection = 'strong'
+login_manager.login_view = 'login'
+login_manager.login_message_category = 'info'
 
 
 def create_app(test_config=None):
@@ -25,15 +44,103 @@ def create_app(test_config=None):
     app.config.from_object(Config)
     setup_db(app)
     migrate.init_app(app, db)
+    bcrypt.init_app(app)
     admin = Admin(app)
+    login_manager.init_app(app)
 
     admin.add_view(ModelView(Restaurant, db.session))
     admin.add_view(ModelView(Item, db.session))
     admin.add_view(ModelView(User, db.session))
 
-    @app.route('/')
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
+
+    @app.before_request
+    def session_handler():
+        session.permanent = True
+        app.permanent_session_lifetime = timedelta(minutes=1)
+
+    @app.route('/', methods=('GET', 'POST'), strict_slashes=False)
     def index():
-        return render_template('index.html')
+        return render_template('index.html', title='Home')
+
+    @app.route('/login/', methods=('GET', 'POST'), strict_slashes=False)
+    def login():
+        form = login_form()
+
+        if form.validate_on_submit():
+            try:
+                user = User.query.filter_by(email=form.email.data).first()
+                if check_password_hash(user.password, form.password.data):
+                    login_user(user)
+                    return redirect(url_for('index'))
+                else:
+                    flash('Invalid Username or password!', 'danger')
+            except Exception as e:
+                flash(e, 'danger')
+
+        return render_template('auth.html',
+                               form=form,
+                               text='Login',
+                               title='Login',
+                               btn_action='Login'
+                               )
+
+    @app.route('/register/', methods=('GET', 'POST'), strict_slashes=False)
+    def register():
+        form = register_form()
+        if form.validate_on_submit():
+            try:
+                email = form.email.data
+                password = form.password.data
+                username = form.username.data
+
+                print(email)
+
+                newuser = User(
+                    username=username,
+                    email=email,
+                    password=bcrypt.generate_password_hash(password),
+                )
+
+                db.session.add(newuser)
+                db.session.commit()
+
+                flash(f'Account Succesfully created', 'success')
+
+                return redirect(url_for('login'))
+
+            except InvalidRequestError:
+                db.session.rollback()
+                flash(f'Something went wrong!', 'danger')
+            except IntegrityError:
+                db.session.rollback()
+                flash(f'User already exists!.', 'warning')
+            except DataError:
+                db.session.rollback()
+                flash(f'Invalid Entry', 'warning')
+            except InterfaceError:
+                db.session.rollback()
+                flash(f'Error connecting to the database', 'danger')
+            except DatabaseError:
+                db.session.rollback()
+                flash(f'Error connecting to the database', 'danger')
+            except BuildError:
+                db.session.rollback()
+                flash(f'An error occured !', 'danger')
+        return render_template('auth.html',
+                               form=form,
+                               text='Create account',
+                               title='Register',
+                               btn_action='Register account'
+                               )
+
+    @app.route('/logout')
+    @login_required
+    def logout():
+        logout_user()
+        return redirect(url_for('index'))
 
     @app.route('/api')
     def api_test():

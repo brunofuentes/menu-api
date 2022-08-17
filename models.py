@@ -1,7 +1,7 @@
 import os
 import json
 from flask import Flask
-from sqlalchemy import Column, String, Integer, LargeBinary, ARRAY, create_engine
+from sqlalchemy import Column, String, Integer, LargeBinary, ARRAY
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 
