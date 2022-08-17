@@ -1,8 +1,9 @@
 import os
 import json
 from flask import Flask
-from sqlalchemy import Column, String, Integer, Numeric, ARRAY, create_engine
+from sqlalchemy import Column, String, Integer, LargeBinary, ARRAY, create_engine
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
 
 database_path = 'postgresql://postgres@localhost:5432/menu-db-v1'
 
@@ -52,7 +53,7 @@ class Restaurant(db.Model):
 
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
-    slug = Column(String)
+    slug = Column(String, unique=True)
     description = Column(String)
     city = Column(String)
     state = Column(String)
@@ -102,17 +103,30 @@ class Restaurant(db.Model):
         return f'Restaurant {self.id}: {self.name}'
 
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)
-    username = Column(String)
+    username = Column(String, nullable=False, unique=True)
+    password = Column(LargeBinary, nullable=False)
     email = Column(String)
     name = Column(String)
     phone = Column(String)
     address = Column(String)
     restaurant_id = Column(Integer, db.ForeignKey(
-        'restaurants.id'), nullable=False)
+        'restaurants.id'))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'username': self.username,
+            'password': self.password,
+            'email': self.email,
+            'name': self.name,
+            'phone': self.phone,
+            'address': self.address,
+            'restaurant_id': self.restaurant_id
+        }
 
     def add(self):
         db.session.add(self)
@@ -126,7 +140,7 @@ class User(db.Model):
         db.session.commit()
 
     def __repr__(self):
-        return f'User {self.id}: {self.name}'
+        return '<User %r>' % self.username
 
 
 class Item(db.Model):
