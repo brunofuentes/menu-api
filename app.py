@@ -1,4 +1,6 @@
 import sys
+import os
+import json
 from flask import (
     Flask,
     request,
@@ -31,7 +33,7 @@ def create_app(test_config=None):
 
     @app.route('/')
     def index():
-        return 'Server is up.'
+        return render_template('index.html')
 
     @app.route('/api')
     def api_test():
@@ -306,4 +308,4 @@ def create_app(test_config=None):
 app = create_app()
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
