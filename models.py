@@ -5,7 +5,8 @@ from sqlalchemy import Column, String, Integer, LargeBinary, ARRAY, Boolean
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 
-database_path = 'postgresql://postgres@localhost:5432/menu-db-v1'
+# database_path = 'postgresql://postgres@localhost:5432/menu-db-v1'
+database_path = os.environ['DATABASE_URL']
 
 db = SQLAlchemy()
 
