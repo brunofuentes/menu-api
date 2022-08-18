@@ -1,18 +1,8 @@
 import sys
 import os
 import json
-from flask import (
-    Flask,
-    request,
-    abort,
-    render_template,
-    url_for,
-    redirect,
-    Response,
-    jsonify,
-    session,
-    flash
-)
+from flask import (Flask, request, abort, render_template,
+                   url_for, redirect, Response, jsonify, session, flash)
 from datetime import timedelta
 from sqlalchemy.exc import (
     IntegrityError, DataError, DatabaseError, InterfaceError, InvalidRequestError)
@@ -39,6 +29,23 @@ login_manager.login_view = 'login'
 login_manager.login_message_category = 'info'
 
 
+class SuperUserView(ModelView):
+    def is_accessible(self):
+        if current_user.is_authenticated:
+            return current_user.is_superUser
+
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect(url_for('login'))
+
+
+class UserView(ModelView):
+    def is_accessible(self):
+        return current_user.is_authenticated
+
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect(url_for('login'))
+
+
 def create_app(test_config=None):
     app = Flask(__name__)
     app.config.from_object(Config)
@@ -48,9 +55,9 @@ def create_app(test_config=None):
     admin = Admin(app)
     login_manager.init_app(app)
 
-    admin.add_view(ModelView(Restaurant, db.session))
-    admin.add_view(ModelView(Item, db.session))
-    admin.add_view(ModelView(User, db.session))
+    admin.add_view(UserView(Restaurant, db.session))
+    admin.add_view(UserView(Item, db.session))
+    admin.add_view(SuperUserView(User, db.session))
 
     @login_manager.user_loader
     def load_user(user_id):
@@ -172,6 +179,7 @@ def create_app(test_config=None):
         )
 
     @app.route('/restaurants', methods=['POST'])
+    @login_required
     def add_restaurant():
         body = request.get_json()
         new_name = body.get('name', None)
@@ -212,6 +220,7 @@ def create_app(test_config=None):
             abort(422)
 
     @app.route('/restaurants/<int:id>/items', methods=['POST'])
+    @login_required
     def add_items(id):
         body = request.get_json()
 
@@ -244,6 +253,7 @@ def create_app(test_config=None):
             abort(422)
 
     @app.route('/restaurants/<int:id>', methods=['PATCH'])
+    @login_required
     def update_restaurant(id):
         body = request.get_json()
         new_name = body.get('name', None)
@@ -288,6 +298,7 @@ def create_app(test_config=None):
             abort(422)
 
     @app.route('/items/<int:id>', methods=['PATCH'])
+    @login_required
     def update_item(id):
         body = request.get_json()
 
@@ -319,6 +330,7 @@ def create_app(test_config=None):
             abort(422)
 
     @app.route('/restaurants/<int:id>', methods=['DELETE'])
+    @login_required
     def delete_restaurant(id):
 
         try:
@@ -341,6 +353,7 @@ def create_app(test_config=None):
             abort(422)
 
     @app.route('/items/<int:id>', methods=['DELETE'])
+    @login_required
     def delete_item(id):
 
         try:
