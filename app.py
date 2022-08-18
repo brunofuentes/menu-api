@@ -29,15 +29,6 @@ login_manager.login_view = 'login'
 login_manager.login_message_category = 'info'
 
 
-# class SuperUserView(ModelView):
-#     def is_accessible(self):
-#         if current_user.is_authenticated:
-#             return current_user.is_superUser
-
-#     def inaccessible_callback(self, name, **kwargs):
-#         return redirect(url_for('login'))
-
-
 class UserView(ModelView):
     def is_accessible(self):
         return current_user.is_authenticated
@@ -55,9 +46,9 @@ def create_app(test_config=None):
     admin = Admin(app)
     login_manager.init_app(app)
 
-    admin.add_view(UserView(Restaurant, db.session))
-    admin.add_view(UserView(Item, db.session))
-    # admin.add_view(SuperUserView(User, db.session))
+    admin.add_view(ModelView(Restaurant, db.session))
+    admin.add_view(ModelView(Item, db.session))
+    admin.add_view(ModelView(User, db.session))
 
     @login_manager.user_loader
     def load_user(user_id):
@@ -68,11 +59,11 @@ def create_app(test_config=None):
         session.permanent = True
         app.permanent_session_lifetime = timedelta(minutes=1)
 
-    @app.route('/', methods=('GET', 'POST'), strict_slashes=False)
+    @app.route('/', methods=['GET', 'POST'], strict_slashes=False)
     def index():
         return render_template('index.html', title='Home')
 
-    @app.route('/login/', methods=('GET', 'POST'), strict_slashes=False)
+    @app.route('/login/', methods=['GET', 'POST'], strict_slashes=False)
     def login():
         form = login_form()
 
@@ -95,7 +86,7 @@ def create_app(test_config=None):
                                btn_action='Login'
                                )
 
-    @app.route('/register/', methods=('GET', 'POST'), strict_slashes=False)
+    @app.route('/register/', methods=['GET', 'POST'], strict_slashes=False)
     def register():
         form = register_form()
         if form.validate_on_submit():
@@ -181,7 +172,6 @@ def create_app(test_config=None):
         )
 
     @app.route('/restaurants', methods=['POST'])
-    @login_required
     def add_restaurant():
         body = request.get_json()
         new_name = body.get('name', None)
@@ -222,7 +212,6 @@ def create_app(test_config=None):
             abort(422)
 
     @app.route('/restaurants/<int:id>/items', methods=['POST'])
-    @login_required
     def add_items(id):
         body = request.get_json()
 
@@ -255,7 +244,6 @@ def create_app(test_config=None):
             abort(422)
 
     @app.route('/restaurants/<int:id>', methods=['PATCH'])
-    @login_required
     def update_restaurant(id):
         body = request.get_json()
         new_name = body.get('name', None)
@@ -300,7 +288,6 @@ def create_app(test_config=None):
             abort(422)
 
     @app.route('/items/<int:id>', methods=['PATCH'])
-    @login_required
     def update_item(id):
         body = request.get_json()
 
@@ -332,7 +319,6 @@ def create_app(test_config=None):
             abort(422)
 
     @app.route('/restaurants/<int:id>', methods=['DELETE'])
-    @login_required
     def delete_restaurant(id):
 
         try:
@@ -355,7 +341,6 @@ def create_app(test_config=None):
             abort(422)
 
     @app.route('/items/<int:id>', methods=['DELETE'])
-    @login_required
     def delete_item(id):
 
         try:
