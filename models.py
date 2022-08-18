@@ -1,7 +1,7 @@
 import os
 import json
 from flask import Flask
-from sqlalchemy import Column, String, Integer, LargeBinary, ARRAY
+from sqlalchemy import Column, String, Integer, LargeBinary, ARRAY, Boolean
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 
@@ -15,7 +15,7 @@ def setup_db(app, database_path=database_path):
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.app = app
     db.init_app(app)
-    db_drop_and_create_all()
+    # db_drop_and_create_all()
 
 
 def db_drop_and_create_all():
@@ -113,6 +113,7 @@ class User(UserMixin, db.Model):
     name = Column(String)
     phone = Column(String)
     address = Column(String)
+    is_superUser = Column(Boolean, unique=False, default=False)
     restaurant_id = Column(Integer, db.ForeignKey(
         'restaurants.id'))
 
