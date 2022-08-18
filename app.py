@@ -29,13 +29,13 @@ login_manager.login_view = 'login'
 login_manager.login_message_category = 'info'
 
 
-class SuperUserView(ModelView):
-    def is_accessible(self):
-        if current_user.is_authenticated:
-            return current_user.is_superUser
+# class SuperUserView(ModelView):
+#     def is_accessible(self):
+#         if current_user.is_authenticated:
+#             return current_user.is_superUser
 
-    def inaccessible_callback(self, name, **kwargs):
-        return redirect(url_for('login'))
+#     def inaccessible_callback(self, name, **kwargs):
+#         return redirect(url_for('login'))
 
 
 class UserView(ModelView):
@@ -57,7 +57,7 @@ def create_app(test_config=None):
 
     admin.add_view(UserView(Restaurant, db.session))
     admin.add_view(UserView(Item, db.session))
-    admin.add_view(SuperUserView(User, db.session))
+    # admin.add_view(SuperUserView(User, db.session))
 
     @login_manager.user_loader
     def load_user(user_id):
@@ -81,6 +81,7 @@ def create_app(test_config=None):
                 user = User.query.filter_by(email=form.email.data).first()
                 if check_password_hash(user.password, form.password.data):
                     login_user(user)
+                    flash('Login Successfull!')
                     return redirect(url_for('index'))
                 else:
                     flash('Invalid Username or password!', 'danger')
@@ -147,6 +148,7 @@ def create_app(test_config=None):
     @login_required
     def logout():
         logout_user()
+        flash('You have been logged out!')
         return redirect(url_for('index'))
 
     @app.route('/api')
