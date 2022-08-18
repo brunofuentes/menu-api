@@ -10,14 +10,14 @@ from werkzeug.routing import BuildError
 from flask_bcrypt import Bcrypt, generate_password_hash, check_password_hash
 from flask_login import (UserMixin, login_user, LoginManager,
                          current_user, logout_user, login_required)
-from forms import login_form, register_form
+from .forms import login_form, register_form
 from flask_bcrypt import Bcrypt
-from models import setup_db, Restaurant, Item, User
+from .models import setup_db, Restaurant, Item, User
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
-from config import Config
+from .config import Config
 
 
 db = SQLAlchemy()
