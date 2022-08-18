@@ -1,5 +1,11 @@
 {% extends 'admin/master.html' %}
 
 {% block body %}
-<h1>Hello {{current_user.name}}</h1>
+<h1>Hello {{current_user.username}}</h1>
+
+<div>
+    <a class="btn" href="{{url_for('login')}}">Login</a>
+    <a class="btn btn-outline-secondary" href="{{url_for('logout')}}">Logout</a>
+</div>
+
 {% endblock %}

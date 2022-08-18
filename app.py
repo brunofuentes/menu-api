@@ -29,7 +29,7 @@ login_manager.login_view = 'login'
 login_manager.login_message_category = 'info'
 
 
-class UserView(ModelView):
+class AdminView(ModelView):
     def is_accessible(self):
         return current_user.is_authenticated
 
@@ -46,9 +46,8 @@ def create_app(test_config=None):
     admin = Admin(app)
     login_manager.init_app(app)
 
-    admin.add_view(ModelView(Restaurant, db.session))
-    admin.add_view(ModelView(Item, db.session))
-    admin.add_view(ModelView(User, db.session))
+    admin.add_view(AdminView(Restaurant, db.session))
+    admin.add_view(AdminView(Item, db.session))
 
     @login_manager.user_loader
     def load_user(user_id):
@@ -73,7 +72,7 @@ def create_app(test_config=None):
                 if check_password_hash(user.password, form.password.data):
                     login_user(user)
                     flash('Login Successfull!')
-                    return redirect(url_for('index'))
+                    return redirect(url_for('admin.index'))
                 else:
                     flash('Invalid Username or password!', 'danger')
             except Exception as e:
@@ -140,7 +139,7 @@ def create_app(test_config=None):
     def logout():
         logout_user()
         flash('You have been logged out!')
-        return redirect(url_for('index'))
+        return redirect(url_for('admin.index'))
 
     @app.route('/api')
     def api_test():
